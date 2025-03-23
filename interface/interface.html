@@ -1,273 +1,32 @@
-<!DOCTYPE html> 
-
-<html lang="pt-BR"> 
-
- 
-
-<head> 
-
-    <meta charset="UTF-8"> 
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
-
-    <link rel="preconnect" href="https://fonts.googleapis.com"> 
-
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> 
-
-    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet"> 
-
-    <link rel="stylesheet" href="SRC/CSS/style.css"> 
-
-    <title>Controle da Estufa Inteligente</title> 
-
-    <style> 
-
-        /* Estilo básico para a notificação */ 
-
-        .notification { 
-
-            display: none; 
-
-            position: fixed; 
-
-            bottom: 20px; 
-
-            right: 20px; 
-
-            background-color: #4caf50; 
-
-            color: white; 
-
-            padding: 15px; 
-
-            border-radius: 5px; 
-
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); 
-
-            z-index: 1000; 
-
-        } 
-
- 
-
-        .notification.error { 
-
-            background-color: #f44336; 
-
-        } 
-
- 
-
-        .botao button { 
-
-            margin: 5px; 
-
-            padding: 10px 20px; 
-
-            font-size: 16px; 
-
-            cursor: pointer; 
-
-        } 
-
- 
-
-        .botao button:hover { 
-
-            background-color: #ddd; 
-
-        } 
-
- 
-
-        /* Estilo do status da bomba */ 
-
-        .status-bomba { 
-
-            margin-top: 20px; 
-
-            font-size: 18px; 
-
-            font-weight: bold; 
-
-        } 
-
-    </style> 
-
-</head> 
-
- 
-
-<body> 
-
-    <header> 
-
-        <h1>Estufa Inteligente - Controle Remoto</h1> 
-
-    </header> 
-
-    <main> 
-
- 
-
-        <!-- Dados dos sensores --> 
-
-        <h2>Temperatura e Umidade</h2> 
-
-        <p><strong>Temperatura:</strong> <span id="temp">Carregando...</span> °C</p> 
-
-        <p><strong>Umidade do Ar:</strong> <span id="umidadeAr">Carregando...</span> %</p> 
-
-        <p><strong>Umidade do Solo:</strong> <span id="umidadeSolo">Carregando...</span> %</p> 
-
- 
-
-        <!-- Controle da Irrigação --> 
-
-        <section> 
-
-            <h2>Controle da Irrigação</h2> 
-
-            <div class="botao"> 
-
-                <button onclick="sendMqttMessage('ON')">Ligar Bomba</button> 
-
-                <button onclick="sendMqttMessage('OFF')">Desligar Bomba</button> 
-
-            </div> 
-
-        </section> 
-
- 
-
-        <!-- Exibição de status da bomba --> 
-
-        <div class="status-bomba"> 
-
-            <h3>Status da Bomba: <span id="statusBomba">Carregando...</span></h3> 
-
-        </div> 
-
- 
-
-        <!-- Notificação --> 
-
-        <div id="notification" class="notification"></div> 
-
-    </main> 
-
- 
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script> 
-
-    <script> 
-
-        const brokerUrl = 'ws://broker.hivemq.com:8000/mqtt';  // URL do broker MQTT (WebSocket) 
-
-        const topicStatus = 'SENAI/G88407/status';  // Tópico para status da estufa 
-
-        const topicControl = 'SENAI/G88407/control'; // Tópico para controle da bomba 
-
-        const topicStatuscontrol = 'SENAI/G88407/statuscontrol'; // Tópico para status da bomba 
-
-        const client = mqtt.connect(brokerUrl);  // Conexão com o broker MQTT 
-
-        const notification = document.getElementById('notification'); 
-
- 
-
-        // Conectar ao broker MQTT 
-
-        client.on('connect', () => { 
-
-            console.log('Conectado ao broker MQTT'); 
-
-            showNotification('Conectado ao broker MQTT', 'success'); 
-
-            client.subscribe(topicStatus, () => { 
-
-                console.log('Inscrito no tópico de status'); 
-
-            }); 
-
-            client.subscribe(topicStatuscontrol, () => { 
-
-                console.log('Inscrito no tópico de status da bomba'); 
-
-            }); 
-
-        }); 
-
- 
-
-        // Função para enviar a mensagem MQTT para controlar a bomba 
-
-        function sendMqttMessage(message) { 
-
-            client.publish(topicControl, message);  // Envia a mensagem para o tópico de controle 
-
-            showNotification(`Mensagem enviada: ${message}`, 'success'); 
-
-        } 
-
- 
-
-        // Função para exibir notificação 
-
-        function showNotification(message, type) { 
-
-            notification.innerText = message; 
-
-            notification.className = `notification ${type === 'error' ? 'error' : 'success'}`; 
-
-            notification.style.display = 'block'; 
-
-            setTimeout(() => { 
-
-                notification.style.display = 'none'; 
-
-            }, 3000); // Ocultar a notificação após 3 segundos 
-
-        } 
-
- 
-
-        // Função para receber e exibir os dados do status da estufa 
-
-        client.on('message', (topic, message) => { 
-
-            if (topic === topicStatus) { 
-
-                // Supondo que os dados sejam recebidos em formato JSON 
-
-                const data = JSON.parse(message.toString()); 
-
-                document.getElementById('temp').innerText = data.temperature || 'N/A'; 
-
-                document.getElementById('umidadeAr').innerText = data.humidity || 'N/A'; 
-
-                document.getElementById('umidadeSolo').innerText = data.soilMoisture || 'N/A'; 
-
-            } 
-
- 
-
-            if (topic === topicStatuscontrol) { 
-
-                // Atualiza o status da bomba conforme o comando recebido 
-
-                const statusBomba = message.toString().toUpperCase(); 
-
-                document.getElementById('statusBomba').innerText = statusBomba === 'ON' ? 'Bomba Ligada' : 'Bomba Desligada'; 
-
-            } 
-
-        }); 
-
-    </script> 
-
-</body> 
-
- 
-
-</html> 
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel de Controle Ambiental</title>
+    <link rel="stylesheet" href="SRC/CSS/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+    <header>
+        <h1>Painel de Controle Ambiental</h1>
+    </header>
+    <main>
+        <h2 class="titulo">Dados Ambientais</h2>
+        <div class="dados">
+            <p>Temperatura: <span id="temperatura">25</span>°C</p>
+            <p>Umidade do Ar: <span id="umidadeAr">60</span>%</p>
+            <p>Umidade do Solo: <span id="umidadeSolo">75</span>%</p>
+            <p>Última atualização: <span id="dataHora">Agora</span></p>
+        </div>
+        <div class="grafico">
+            <canvas id="graficoTemperatura"></canvas>
+        </div>
+    </main>
+
+    <script src="SRC/js/script.js"></script>
+</body>
+
+</html>

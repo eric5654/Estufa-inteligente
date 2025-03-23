@@ -1,85 +1,82 @@
-* {
+body {
+    font-family: 'Roboto', sans-serif; /* Fonte moderna e limpa */
     margin: 0;
     padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    background-color: #dddddd;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 80 40' width='80' height='40'%3E%3Cpath fill='%2308602d' fill-opacity='0.62' d='M0 40a19.96 19.96 0 0 1 5.9-14.11 20.17 20.17 0 0 1 19.44-5.2A20 20 0 0 1 20.2 40H0zM65.32.75A20.02 20.02 0 0 1 40.8 25.26 20.02 20.02 0 0 1 65.32.76zM.07 0h20.1l-.08.07A20.02 20.02 0 0 1 .75 5.25 20.08 20.08 0 0 1 .07 0zm1.94 40h2.53l4.26-4.24v-9.78A17.96 17.96 0 0 0 2 40zm5.38 0h9.8a17.98 17.98 0 0 0 6.67-16.42L7.4 40zm3.43-15.42v9.17l11.62-11.59c-3.97-.5-8.08.3-11.62 2.42zm32.86-.78A18 18 0 0 0 63.85 3.63L43.68 23.8zm7.2-19.17v9.15L62.43 2.22c-3.96-.5-8.05.3-11.57 2.4zm-3.49 2.72c-4.1 4.1-5.81 9.69-5.13 15.03l6.61-6.6V6.02c-.51.41-1 .85-1.48 1.33zM17.18 0H7.42L3.64 3.78A18 18 0 0 0 17.18 0zM2.08 0c-.01.8.04 1.58.14 2.37L4.59 0H2.07z'%3E%3C/path%3E%3C/svg%3E");
-    font-family: "Merriweather", serif;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
-    min-height: 100vh;
-    padding-top: none;
+    background-color: #1a202c; /* Fundo escuro para um visual de painel */
+    color: #e2e8f0; /* Texto claro para contraste */
+    line-height: 1.6;
 }
 
 header {
-    width: 100%;
+    background-color: #2d3748; /* Tom mais claro para o cabeçalho */
+    color: #cbd5e0;
     text-align: center;
-    background-color: #167c38bd;
-    border-bottom: solid 1px #000000;
-}
-
-
-h1 {
-    margin: 50px;
-    font-size: 50px;
-    text-shadow: -6px 5px 5px rgba(0, 0, 0, 0.808);;
+    padding: 1.5em 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
 }
 
 main {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    background-color: #111111ad;
-    margin: 50px;
-    padding: 40px;
-    border: solid 1px #000000;
+    width: 90%;
+    max-width: 1000px; /* Aumenta o máximo para telas maiores */
+    margin: 2em auto;
+    padding: 2em;
+    background-color: #2d3748; /* Fundo escuro para o conteúdo principal */
     border-radius: 10px;
-    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .titulo {
-    font-size: 45px;
-    margin: 20px;
+    text-align: center;
+    margin-bottom: 1.5em;
+    font-size: 2.2em; /* Título maior */
+    color: #4fd1c5; /* Cor de destaque para o título */
+    text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* Sombra para dar profundidade */
 }
 
 .dados {
-    margin: 20px;
-    font-size: 25px;
+    display: grid; /* Usando grid para layout responsivo */
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Colunas responsivas */
+    gap: 1.5em;
+    margin-bottom: 2em;
 }
 
-p {
-    margin: 15px;
+.dados > div {
+    padding: 1.5em;
+    background-color: #1a202c; /* Fundo escuro para os blocos de dados */
+    border-radius: 8px;
+    border: 1px solid #4a5568; /* Borda sutil */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-.botao {
-    display: flex;
-    gap: 8px;
-    margin: 10px;
+.grafico {
+    width: 100%;
+    max-width: 800px;
+    margin: 2em auto;
+    background-color: #1a202c; /* Fundo escuro para o gráfico */
+    border-radius: 8px;
+    padding: 1em;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
-button {
-    margin: 10px;
-    padding: 10px 20px;
-    border: solid 1px #000000;
-    border-radius: 30px;
-    background-color: #ffffff;
-    color: rgb(0, 0, 0);
-    cursor: pointer;
-    width: 120px;
-    height: 50px;
-    transition: transform 0.3s ease;
+/* Estilos adicionais para visualização de dados */
+.dados h3 {
+    color: #4fd1c5; /* Cor de destaque para os títulos dos dados */
+    margin-bottom: 0.5em;
 }
 
-button:hover {
-    transform: scale(1.2);
-    background: #00160c;
-    color: #ffffff;
-    border: solid 1px #ffffff;
+.dados p {
+    font-size: 1em;
+    color: #cbd5e0;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    main {
+        width: 95%;
+        padding: 1.5em;
+    }
+
+    .titulo {
+        font-size: 1.8em;
+    }
 }
