@@ -1,23 +1,14 @@
-// Configurações MQTT
-const brokerUrl = 'ws://broker.hivemq.com:8000/mqtt';
-const topicStatus = 'SENAI/G88407/status';
-const topicControl = 'SENAI/G88407/control';
-const topicStatuscontrol = 'SENAI/G88407/statuscontrol';
-const client = mqtt.connect(brokerUrl);
-const notification = document.getElementById('notification');
-
-// Dados para o gráfico
+// Configuração do gráfico (inicialmente com dados de exemplo)
 const dadosTemperatura = {
-    labels: [], // Inicialmente vazio, será preenchido com os horários
+    labels: [],
     datasets: [{
         label: 'Temperatura (°C)',
-        data: [], // Inicialmente vazio, será preenchido com os dados de temperatura
+        data: [],
         borderColor: 'rgb(75, 192, 192)',
         tension: 0.1
     }]
 };
 
-// Configuração do gráfico
 const configGraficoTemperatura = {
     type: 'line',
     data: dadosTemperatura,
@@ -31,64 +22,76 @@ const configGraficoTemperatura = {
     }
 };
 
-// Criar gráfico
 const graficoTemperatura = new Chart(
     document.getElementById('graficoTemperatura'),
     configGraficoTemperatura
 );
 
-// Conectar ao broker MQTT
-client.on('connect', () => {
-    console.log('Conectado ao broker MQTT');
-    showNotification('Conectado ao broker MQTT', 'success');
-    client.subscribe(topicStatus, () => {
-        console.log('Inscrito no tópico de status');
-    });
-    client.subscribe(topicStatuscontrol, () => {
-        console.log('Inscrito no tópico de status da bomba');
-    });
-});
+// Função para gerar dados simulados e enviar para o banco de dados
+function atualizarDadosSimulados() {
+    const agora = new Date().toLocaleTimeString();
+    const temperatura = Math.floor(Math.random() * 10) + 20;
+    const umidadeAr = Math.floor(Math.random() * 20) + 50;
+    const umidadeSolo = Math.floor(Math.random() * 30) + 60;
 
-// Função para enviar a mensagem MQTT para controlar a bomba
-function sendMqttMessage(message) {
-    client.publish(topicControl, message);
-    showNotification(`Mensagem enviada: ${message}`, 'success');
+    dadosTemperatura.labels.push(agora);
+    dadosTemperatura.datasets[0].data.push(temperatura);
+    graficoTemperatura.update();
+
+    document.getElementById('temperatura').textContent = temperatura;
+    document.getElementById('umidadeAr').textContent = umidadeAr;
+    document.getElementById('umidadeSolo').textContent = umidadeSolo;
+    document.getElementById('dataHora').textContent = agora;
+
+    // Envia os dados simulados para o banco de dados
+    fetch('http://127.0.0.1:5008/dados/simulados', { // Porta corrigida para 5008
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log("Dados simulados enviados:", data);
+    })
+    .catch(error => {
+        console.error('Erro ao enviar dados simulados:', error);
+    });
 }
 
-// Função para exibir notificação
-function showNotification(message, type) {
-    notification.innerText = message;
-    notification.className = `notification ${type === 'error' ? 'error' : 'success'}`;
-    notification.style.display = 'block';
-    setTimeout(() => {
-        notification.style.display = 'none';
-    }, 3000); // Ocultar a notificação após 3 segundos
+// Função para buscar e atualizar os dados do banco de dados (com fallback para dados simulados)
+function atualizarDados() {
+    fetch('http://127.0.0.1:5008/dados') // Porta corrigida para 5008
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.length > 0) {
+                dadosTemperatura.labels = [];
+                dadosTemperatura.datasets[0].data = [];
+
+                data.forEach(item => {
+                    dadosTemperatura.labels.push(item.data_hora);
+                    dadosTemperatura.datasets[0].data.push(item.temperatura);
+                });
+
+                graficoTemperatura.update();
+
+                const ultimoDado = data[data.length - 1];
+                document.getElementById('temperatura').textContent = ultimoDado.temperatura;
+                document.getElementById('umidadeAr').textContent = ultimoDado.umidade_ar;
+                document.getElementById('umidadeSolo').textContent = ultimoDado.umidade_solo;
+                document.getElementById('dataHora').textContent = ultimoDado.data_hora;
+            } else {
+                atualizarDadosSimulados();
+            }
+        })
+        .catch(error => {
+            console.error('Erro ao buscar dados:', error);
+            atualizarDadosSimulados();
+        });
 }
 
-// Função para receber e exibir os dados do status da estufa
-client.on('message', (topic, message) => {
-    if (topic === topicStatus) {
-        // Supondo que os dados sejam recebidos em formato JSON
-        const data = JSON.parse(message.toString());
-        const temperatura = data.temperature || 'N/A';
-        const umidadeAr = data.humidity || 'N/A';
-        const umidadeSolo = data.soilMoisture || 'N/A';
-        const agora = new Date().toLocaleTimeString();
+// Atualiza os dados a cada 5 segundos
+setInterval(atualizarDados, 5000);
 
-        document.getElementById('temperatura').textContent = temperatura;
-        document.getElementById('umidadeAr').textContent = umidadeAr;
-        document.getElementById('umidadeSolo').textContent = umidadeSolo;
-        document.getElementById('dataHora').textContent = agora;
-
-        // Atualizar gráfico com os dados recebidos
-        dadosTemperatura.labels.push(agora);
-        dadosTemperatura.datasets[0].data.push(temperatura);
-        graficoTemperatura.update();
-    }
-
-    if (topic === topicStatuscontrol) {
-        // Atualiza o status da bomba conforme o comando recebido
-        const statusBomba = message.toString().toUpperCase();
-        document.getElementById('statusBomba').innerText = statusBomba === 'ON' ? 'Bomba Ligada' : 'Bomba Desligada';
-    }
-});
+// Chama a função para buscar os dados inicialmente
+atualizarDados();
